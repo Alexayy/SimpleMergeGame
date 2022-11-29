@@ -1,28 +1,39 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using GameAnalyticsSDK;
+using GameAnalyticsSDK.Events;
+using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
-    [Header("Buttons.")] [SerializeField] private Button _pauseButton;
+    [Header("Buttons.")] 
+    [SerializeField] private Button _pauseButton;
     [SerializeField] private Button _continueButton;
 
-    [Header("Canvases.")] [SerializeField] private Canvas _gamePlayCanvas;
+    [Header("Canvases.")] 
+    [SerializeField] private Canvas _gamePlayCanvas;
     [SerializeField] private Canvas _uiCanvas;
 
-    [Header("Tap the screen canvas.")] [SerializeField]
-    private Button _tapCanvasButton;
-
+    [Header("Tap the screen canvas.")] 
+    [SerializeField] private Button _tapCanvasButton;
     [SerializeField] private GameObject _itemHolder;
+    
+    [Header("Mergable item related")]
+    [SerializeField] private Item[] _mergingItems;
+    [SerializeField] private TMP_Text _numberOfMergesText;
+    [SerializeField] private int _numberOfMerges = 0;
+    
+    [Header("Extras")]
+    [SerializeField] private Canvas _pauseCanvas;
 
+    [Header("Variables")]
+    private int index = 0;
     private Transform setParentTransform => _itemHolder.transform;
     private List<Item> _itemsSpawned = new List<Item>();
-
-    [SerializeField] private Item[] _mergingItems;
-
-    private int index = 0;
 
     private void Awake()
     {
@@ -33,8 +44,10 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-        _pauseButton.onClick.AddListener(delegate { Debug.Log("PAUSE BUTTON PRESSED!"); });
-        _continueButton.onClick.AddListener(delegate { Debug.Log("CONTINUE BUTTON PRESSED!"); });
+        _tapCanvasButton.enabled = true;
+        _pauseCanvas.enabled = false;
+        _pauseButton.onClick.AddListener(delegate { PauseGame(); GameAnalytics.NewProgressionEvent(GAProgressionStatus.Complete, "PAUSED"); _tapCanvasButton.enabled = false;});
+        _continueButton.onClick.AddListener(delegate { ResumeGame(); GameAnalytics.NewProgressionEvent(GAProgressionStatus.Start, "CONTINUED"); _tapCanvasButton.enabled = true;});
         _tapCanvasButton.onClick.AddListener(delegate
         {
             Debug.Log("This shit working?");
@@ -64,6 +77,10 @@ public class GameManager : MonoBehaviour
             {
                 Destroy(a.gameObject);
             }
+
+            _numberOfMerges++;
+            
+            _numberOfMergesText.text = _numberOfMerges.ToString();
             _itemsSpawned.RemoveAll(x => x.name.Contains("Item_1"));
             _itemsSpawned.Add(Instantiate(_mergingItems[1], setParentTransform));
         }
@@ -75,6 +92,9 @@ public class GameManager : MonoBehaviour
             {
                 Destroy(a.gameObject);
             }
+            
+            _numberOfMerges++;
+            _numberOfMergesText.text = _numberOfMerges.ToString();
             _itemsSpawned.RemoveAll(x => x.name.Contains("Item_2"));
             _itemsSpawned.Add(Instantiate(_mergingItems[2], setParentTransform));
         }
@@ -86,6 +106,9 @@ public class GameManager : MonoBehaviour
             {
                 Destroy(a.gameObject);
             }
+            
+            _numberOfMerges++;
+            _numberOfMergesText.text = _numberOfMerges.ToString();
             _itemsSpawned.RemoveAll(x => x.name.Contains("Item_3"));
             _itemsSpawned.Add(Instantiate(_mergingItems[3], setParentTransform));
         }
@@ -97,6 +120,9 @@ public class GameManager : MonoBehaviour
             {
                 Destroy(a.gameObject);
             }
+            
+            _numberOfMerges++;
+            _numberOfMergesText.text = _numberOfMerges.ToString();
             _itemsSpawned.RemoveAll(x => x.name.Contains("Item_4"));
             _itemsSpawned.Add(Instantiate(_mergingItems[4], setParentTransform));
         }
@@ -105,14 +131,11 @@ public class GameManager : MonoBehaviour
         if (_itemsSpawned.FindAll(x => x.name.Contains("Item_5")).Count >= 10)
         {
             GameOver();
+            _tapCanvasButton.enabled = false;
         }
         
         _itemsSpawned.Add(Instantiate(_mergingItems[0], setParentTransform));
-        foreach (var a in _itemsSpawned)
-        {
-            Debug.Log($"Object name {a.name}");
-        }
-
+        GameAnalytics.NewProgressionEvent(GAProgressionStatus.Complete, "Number of merges", _numberOfMerges);
         // }
     }
 
@@ -120,8 +143,23 @@ public class GameManager : MonoBehaviour
     {
         if (index >= 5)
         {
-            Debug.Log("GAME OVER!");
+            GameAnalytics.NewProgressionEvent(GAProgressionStatus.Complete, "WON");
+            SceneManager.LoadScene("GameOverScreen");
         }
+    }
+
+    private void PauseGame()
+    {
+        _pauseCanvas.enabled = true;
+        GameAnalytics.NewProgressionEvent(GAProgressionStatus.Undefined, "Paused.");
+        Time.timeScale = 0;
+    }
+    
+    private void ResumeGame()
+    {
+        _pauseCanvas.enabled = false;
+        GameAnalytics.NewProgressionEvent(GAProgressionStatus.Undefined, "Resumed.");
+        Time.timeScale = 1;
     }
 }
 

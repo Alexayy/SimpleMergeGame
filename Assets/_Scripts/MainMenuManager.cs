@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Facebook.Unity;
+using GameAnalyticsSDK;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -35,12 +36,12 @@ public class MainMenuManager : MonoBehaviour
         _facebookLogouButton.onClick.AddListener(_facebook.Logout);
         _facebookShareButton.onClick.AddListener(_facebook.Share);
         _facebookGetFriendsButton.onClick.AddListener(_facebook.GetFriendsThatPlayThisGame);
-        _playGameButton.onClick.AddListener(delegate { SceneManager.LoadScene("Game"); });
+        _playGameButton.onClick.AddListener(delegate { SceneManager.LoadScene("Game"); GameAnalytics.NewProgressionEvent(GAProgressionStatus.Start, "Tapped start game.");});
         _quitAppButton.onClick.AddListener(delegate { Application.Quit(); });
     }
 
     private void Update()
     {
-        _playGameButton.enabled = FB.IsLoggedIn;
+        // _playGameButton.enabled = FB.IsLoggedIn;
     }
 }

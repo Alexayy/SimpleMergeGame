@@ -7,6 +7,7 @@ using UnityEngine.UI;
 
 public class GameOverScreenManager : MonoBehaviour
 {
+    [Header("Buttons")]
     [SerializeField] private Button _playAgainButton;
     [SerializeField] private Button _mainMenuButton;
     [SerializeField] private Button _quitApplicationButton;
